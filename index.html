@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#B0D2F7">
+<title>DEMETHER.EXE</title>
+
+<!--
+=====================================================================
+  DEMETHER // REALISM.OS - satu file, bisa diedit di Notepad
+=====================================================================
+  CARA PAKAI
+  1. Simpan file ini sebagai  index.html
+  2. Buat folder bernama  images  di sebelah file ini
+  3. Taruh foto di folder images, lalu sesuaikan nama file
+     di bagian "KONFIGURASI" (paling bawah, di dalam <script>)
+  4. Klik dua kali index.html untuk membuka di browser
+
+  
+  CATATAN FAKTA
+  Semua teks resmi REALISM diambil dari https://realismos.drr.ac
+  Bagian bertanda [ISI SENDIRI] adalah tempat kosong untukmu,
+  BUKAN fakta resmi. Ganti sesuai kebutuhan.
+=====================================================================
+-->
+
+<style>
+/* ===================== WARNA & UKURAN ===================== */
+:root {
+  --xp-blue-1: #0058ee;      /* judul jendela */
+  --xp-blue-2: #3a93ff;
+  --xp-blue-dark: #003bb3;
+  --xp-taskbar-1: #3168d5;
+  --xp-taskbar-2: #245edb;
+  --xp-green-1: #5cc05c;     /* tombol Start */
+  --xp-green-2: #2f8f2f;
+  --xp-beige: #ece9d8;       /* warna jendela klasik XP */
+  --xp-border: #0831d9;
+  --realism-sky: #b0d2f7;    /* theme-color resmi dari situs REALISM.OS */
+  --y2k-pink: #ff6fd8;
+  --y2k-cyan: #54f0ff;
+  --y2k-silver: #d8e2f0;
+  --ink: #0b1a3a;
+  --font: Tahoma, "Segoe UI", Verdana, Geneva, sans-serif;
+  --font-pixel: "Courier New", Courier, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  font-family: var(--font);
+  font-size: 13px;
+  color: var(--ink);
+  overflow: hidden;
+  /* Langit + bukit ala wallpaper klasik, murni CSS */
+  background:
+    radial-gradient(ellipse 90% 45% at 30% 100%, #3f9d2a 0%, #5cbb3a 55%, transparent 56%),
+    radial-gradient(ellipse 80% 40% at 85% 108%, #2f8a22 0%, #4aa832 60%, transparent 61%),
+    linear-gradient(#2a74e8 0%, #6aaef5 45%, var(--realism-sky) 75%, #e6f1fd 100%);
+}
+/* awan kecil */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 120px 36px at 18% 22%, rgba(255,255,255,.85), transparent 70%),
+    radial-gradient(ellipse 160px 44px at 62% 14%, rgba(255,255,255,.8), transparent 70%),
+    radial-gradient(ellipse 100px 30px at 82% 34%, rgba(255,255,255,.7), transparent 70%);
+}
+
+button { font-family: inherit; font-size: inherit; cursor: pointer; }
+a { color: #0033cc; }
+:focus-visible { outline: 2px dotted #000; outline-offset: 2px; }
+
+/* ===================== DESKTOP ===================== */
+#desktop {
+  position: fixed; inset: 0 0 36px 0;
+  display: block;
+}
+.icons {
+  position: absolute; top: 12px; left: 10px;
+  display: flex; flex-direction: column; gap: 6px;
+  z-index: 1;
+}
+.icon {
+  width: 84px; background: none; border: 1px solid transparent;
+  color: #fff; text-align: center; padding: 4px 2px;
+  text-shadow: 1px 1px 2px #000, 0 0 3px #000;
+}
+.icon:hover { background: rgba(49,106,197,.35); border-color: rgba(255,255,255,.5); }
+.icon.active { background: rgba(49,106,197,.7); border: 1px dotted #fff; }
+.icon .glyph {
+  display: block; margin: 0 auto 3px; width: 40px; height: 40px;
+  border-radius: 8px; font-size: 22px; line-height: 40px;
+  background: linear-gradient(160deg, #fff 0%, var(--y2k-silver) 40%, #8fb3ea 100%);
+  border: 1px solid #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,.5), inset 0 -6px 8px rgba(0,60,180,.25);
+}
+
+/* ===================== JENDELA ===================== */
+#win {
+  position: absolute; z-index: 5;
+  top: 16px; left: 110px; right: 24px; bottom: 16px;
+  background: var(--xp-beige);
+  border: 3px solid var(--xp-border);
+  border-top: 0;
+  border-radius: 9px 9px 2px 2px;
+  box-shadow: 4px 6px 18px rgba(0,0,40,.55);
+  display: flex; flex-direction: column;
+  min-width: 0;
+}
+#win.max { inset: 0; left: 0; border-radius: 0; border-width: 0 2px 2px; }
+#win.hidden { display: none; }
+
+.titlebar {
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 4px 0 8px; flex: none;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(#3d95ff 0%, #0a5cf0 14%, #0054e3 50%, #0a5cf0 86%, #0043c4 100%);
+  color: #fff; font-weight: bold; font-size: 14px;
+  text-shadow: 1px 1px 0 #0a1f6a;
+  user-select: none;
+}
+#win.max .titlebar { border-radius: 0; }
+.titlebar .ttl { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.titlebar .tico { font-size: 15px; }
+.wbtn {
+  width: 22px; height: 22px; padding: 0; line-height: 1;
+  color: #fff; font-weight: bold; font-size: 13px;
+  border: 1px solid #fff; border-radius: 4px;
+  background: linear-gradient(#78a8ff, #2a62e0 55%, #1b4ec9);
+  box-shadow: inset 0 0 2px rgba(255,255,255,.6);
+}
+.wbtn:hover { filter: brightness(1.15); }
+.wbtn.x { background: linear-gradient(#f59a82, #d9421a 55%, #bf2f0c); }
+
+.menubar {
+  display: flex; flex-wrap: wrap; gap: 0; flex: none;
+  border-bottom: 1px solid #aca899; background: var(--xp-beige);
+}
+.menubar button {
+  background: none; border: 0; padding: 3px 9px; color: #000;
+}
+.menubar button:hover, .menubar button.active { background: #316ac5; color: #fff; }
+
+.toolbar {
+  display: flex; align-items: center; gap: 6px; flex: none;
+  padding: 4px 6px; border-bottom: 1px solid #aca899;
+  background: linear-gradient(#fbfaf4, var(--xp-beige));
+}
+.tbtn {
+  padding: 2px 10px; border: 1px solid transparent; border-radius: 3px;
+  background: none; color: #000;
+}
+.tbtn:hover:not(:disabled) { border-color: #919b9c; background: #fff; }
+.tbtn:disabled { color: #999; cursor: default; }
+.addr {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px;
+  background: #fff; border: 1px solid #7f9db9; padding: 2px 6px;
+  font-family: var(--font-pixel); font-size: 12px;
+}
+.addr span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+#content {
+  flex: 1; overflow: auto; background: #fff;
+  border: 2px inset #fff; margin: 0;
+  scroll-behavior: smooth;
+}
+.statusbar {
+  display: flex; gap: 8px; flex: none; padding: 2px 6px; font-size: 12px;
+  border-top: 1px solid #aca899; background: var(--xp-beige);
+}
+.statusbar .cell { padding: 0 8px; border-left: 1px solid #aca899; }
+.statusbar .cell:first-child { border: 0; padding-left: 0; flex: 1; }
+
+/* ===================== HALAMAN ===================== */
+.page { display: none; padding: 18px 22px 30px; max-width: 980px; margin: 0 auto; }
+.page.show { display: block; animation: pop .18s ease-out; }
+@keyframes pop { from { opacity: 0; transform: scale(.985); } to { opacity: 1; transform: none; } }
+
+h1.hero {
+  margin: 0 0 6px; font-size: clamp(26px, 5.2vw, 46px); line-height: 1.05;
+  font-family: Impact, "Arial Black", Tahoma, sans-serif; letter-spacing: 1px;
+  color: #fff;
+  -webkit-text-stroke: 1px #0a3fb8;
+  text-shadow: 2px 2px 0 #0a3fb8, 4px 4px 0 var(--y2k-pink);
+}
+h2.pg {
+  margin: 0 0 12px; padding: 5px 10px; font-size: 18px; color: #fff;
+  background: linear-gradient(90deg, #0a58e8, #5aa5ff 60%, var(--y2k-cyan));
+  border-radius: 4px; text-shadow: 1px 1px 0 #0a2a8a;
+}
+h3 { margin: 0 0 6px; font-size: 14px; color: #00309c; }
+p { line-height: 1.55; margin: 0 0 10px; }
+
+.hero-box {
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.35) 0 8px, transparent 8px 16px),
+    linear-gradient(135deg, var(--realism-sky), #6aaef5 60%, var(--y2k-pink));
+  border: 2px solid #fff; outline: 1px solid #5b8dd8; border-radius: 8px;
+  padding: 18px; margin-bottom: 14px;
+  box-shadow: inset 0 0 20px rgba(255,255,255,.6);
+}
+.boot-line { font-family: var(--font-pixel); font-size: 12px; color: #00309c; margin: 6px 0 0; }
+.blink { animation: blink 1s steps(2, start) infinite; }
+@keyframes blink { to { visibility: hidden; } }
+
+/* panel gaya "group box" XP */
+.panel {
+  background: #fff; border: 1px solid #7f9db9; border-radius: 4px;
+  margin: 0 0 14px; overflow: hidden;
+}
+.panel > .ph {
+  padding: 4px 10px; font-weight: bold; color: #fff;
+  background: linear-gradient(#5b95f5, #2a62d8);
+  text-shadow: 1px 1px 0 #0a2a8a;
+}
+.panel > .pb { padding: 12px 14px; }
+.panel.pink > .ph { background: linear-gradient(#ff9be6, #e04cc0); text-shadow: 1px 1px 0 #7a1a66; }
+.panel.silver > .ph { background: linear-gradient(#f3f6fb, #aebdd4); color: #0b1a3a; text-shadow: none; }
+
+.grid { display: grid; gap: 14px; }
+.grid.c2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+.grid.c3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+
+.btn-xp {
+  padding: 5px 16px; color: #000; border: 1px solid #003c74; border-radius: 3px;
+  background: linear-gradient(#fff, #ecebe5 86%, #d6d0c5);
+}
+.btn-xp:hover { border-color: #f4a62a; box-shadow: inset 0 0 0 1px #ffd777; }
+.btn-xp:active { background: #d6d0c5; }
+
+table.info { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+table.info td { padding: 4px 8px; border-bottom: 1px solid #d9e3f3; vertical-align: top; }
+table.info td:first-child { width: 38%; color: #00309c; font-weight: bold; font-family: var(--font-pixel); }
+
+/* ----- profile ----- */
+.member { display: flex; flex-direction: column; }
+.photo {
+  aspect-ratio: 4 / 3; background: #dde8f8; position: relative; overflow: hidden;
+  border-bottom: 1px solid #7f9db9;
+}
+.photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo .ph-fallback {
+  position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+  flex-direction: column; text-align: center; padding: 10px;
+  font-family: var(--font-pixel); font-size: 12px; color: #00309c;
+  background:
+    repeating-linear-gradient(45deg, #e8f0fc 0 10px, #d3e2f8 10px 20px);
+}
+.photo.nofile img { display: none; }
+.photo.nofile .ph-fallback { display: flex; }
+.member .nm { font-size: 15px; font-weight: bold; margin: 0; }
+.tag {
+  display: inline-block; padding: 0 8px; border-radius: 9px; font-size: 11px;
+  border: 1px solid #2e8b2e; background: #d9f7d9; color: #14561a;
+}
+
+/* ----- hierarki ----- */
+.flow { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+.flow .node {
+  border: 1px solid #7f9db9; border-radius: 6px; padding: 10px 14px; background: #f4f8ff;
+}
+.flow .node b { color: #00309c; }
+.flow .arrow { text-align: center; font-size: 20px; line-height: 1.1; color: #e04cc0; }
+
+/* ----- identitas visual ----- */
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 5px 12px; border-radius: 14px; border: 1px solid #fff; outline: 1px solid #5b8dd8;
+  background: linear-gradient(#ffffff, #cfe0fa 60%, #a9c6f2);
+  box-shadow: inset 0 -3px 5px rgba(0,60,180,.2);
+  font-weight: bold; color: #00309c;
+}
+.swatch { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+.swatch i {
+  width: 46px; height: 46px; border-radius: 6px; border: 1px solid #fff;
+  outline: 1px solid #5b8dd8; background: var(--realism-sky);
+  box-shadow: inset 0 0 8px rgba(255,255,255,.7);
+}
+.gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.gallery .photo { border: 1px solid #7f9db9; border-radius: 4px; cursor: zoom-in; }
+.gallery .photo:hover { outline: 2px solid var(--y2k-pink); }
+
+.note {
+  border: 1px dashed #e04cc0; background: #fff0fb; padding: 8px 10px; border-radius: 4px;
+  font-size: 12.5px;
+}
+.ph-edit {
+  background: #fffbd6; border: 1px dashed #b8a200; padding: 8px 10px; border-radius: 4px;
+}
+
+.marquee {
+  overflow: hidden; white-space: nowrap; background: #000; color: #54f0ff;
+  font-family: var(--font-pixel); font-size: 12px; padding: 3px 0; border: 2px inset #aaa;
+  margin-bottom: 14px;
+}
+.marquee span { display: inline-block; padding-left: 100%; animation: mq 22s linear infinite; }
+@keyframes mq { to { transform: translateX(-100%); } }
+
+/* ===================== TASKBAR ===================== */
+#taskbar {
+  position: fixed; left: 0; right: 0; bottom: 0; height: 36px; z-index: 50;
+  display: flex; align-items: stretch; gap: 4px;
+  background: linear-gradient(#3f8cf3 0%, #2461d9 8%, #245edb 90%, #1941a5 100%);
+  border-top: 1px solid #0c3fb8;
+}
+#start {
+  display: flex; align-items: center; gap: 6px; padding: 0 22px 0 12px;
+  color: #fff; font-style: italic; font-weight: bold; font-size: 18px;
+  border: 0; border-radius: 0 14px 14px 0;
+  background: linear-gradient(#6fd36f 0%, #3ca83c 18%, #2f8f2f 85%, #1f6f1f 100%);
+  text-shadow: 1px 1px 2px #144d14;
+  box-shadow: 2px 0 4px rgba(0,0,0,.4), inset 0 2px 2px rgba(255,255,255,.35);
+}
+#start:hover { filter: brightness(1.1); }
+#start.on { filter: brightness(.88); }
+.task-items { flex: 1; display: flex; gap: 3px; padding: 3px 4px; overflow: hidden; }
+.tk {
+  max-width: 170px; flex: 1 1 110px; min-width: 0;
+  display: flex; align-items: center; gap: 6px; padding: 0 8px; color: #fff;
+  background: linear-gradient(#5b9bf7, #3a7be8); border: 1px solid #1743a8; border-radius: 3px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left;
+}
+.tk:hover { filter: brightness(1.12); }
+.tk.on { background: linear-gradient(#1b4fc0, #2a63d6); box-shadow: inset 1px 1px 3px rgba(0,0,0,.5); }
+#tray {
+  display: flex; align-items: center; gap: 8px; padding: 0 12px; color: #fff; font-size: 12px;
+  background: linear-gradient(#18a0f0, #0f78d8 50%, #0b6ac8);
+  border-left: 1px solid #0a4fa8;
+}
+
+/* ===================== START MENU ===================== */
+#menu {
+  position: fixed; left: 0; bottom: 36px; width: 300px; z-index: 60;
+  display: none; border: 2px solid #0a3fb8; border-radius: 8px 8px 0 0; overflow: hidden;
+  background: #fff; box-shadow: 4px -2px 14px rgba(0,0,30,.5);
+}
+#menu.open { display: block; }
+#menu .mh {
+  padding: 10px 12px; color: #fff; font-weight: bold; font-size: 15px;
+  background: linear-gradient(#2d78f0, #0a4fd6);
+  text-shadow: 1px 1px 0 #0a2a8a;
+}
+#menu .mh small { display: block; font-weight: normal; font-size: 11px; opacity: .9; }
+#menu .mi {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 14px;
+  background: #fff; border: 0; text-align: left; color: #000; font-size: 14px;
+}
+#menu .mi:hover { background: #316ac5; color: #fff; }
+#menu .mi .g { font-size: 20px; width: 26px; text-align: center; }
+#menu .mf {
+  padding: 6px 10px; display: flex; justify-content: flex-end; gap: 6px;
+  background: linear-gradient(#3a82f2, #1957d6); border-top: 1px solid #0a3fb8;
+}
+#menu .mf button { color: #fff; background: none; border: 0; padding: 3px 8px; }
+#menu .mf button:hover { background: rgba(255,255,255,.2); }
+
+/* ===================== DIALOG & LIGHTBOX ===================== */
+.overlay {
+  position: fixed; inset: 0; z-index: 100; display: none;
+  align-items: center; justify-content: center; background: rgba(0,0,40,.35);
+}
+.overlay.open { display: flex; }
+.dialog {
+  width: min(380px, 92vw); background: var(--xp-beige); border: 3px solid var(--xp-border);
+  border-top: 0; border-radius: 8px 8px 0 0; box-shadow: 4px 6px 18px rgba(0,0,0,.6);
+}
+.dialog .titlebar { border-radius: 5px 5px 0 0; }
+.dialog .body { display: flex; gap: 12px; padding: 16px; align-items: flex-start; }
+.dialog .body .big { font-size: 30px; }
+.dialog .foot { display: flex; justify-content: center; gap: 8px; padding: 0 12px 14px; }
+#light img { max-width: 92vw; max-height: 82vh; border: 4px solid #fff; box-shadow: 0 6px 24px #000; }
+
+/* ===================== BOOT SCREEN ===================== */
+#boot {
+  position: fixed; inset: 0; z-index: 200; background: #000; color: #fff;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 22px;
+  text-align: center; cursor: pointer;
+}
+#boot.off { display: none; }
+#boot .logo {
+  font-family: Impact, "Arial Black", sans-serif; font-size: clamp(34px, 8vw, 68px); letter-spacing: 2px;
+  background: linear-gradient(#fff, var(--realism-sky) 60%, #4a90f0);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+#boot .logo em { color: var(--y2k-pink); -webkit-text-fill-color: var(--y2k-pink); font-style: normal; }
+.bar {
+  width: 200px; height: 16px; border: 2px solid #aeb8c9; border-radius: 4px; padding: 2px; overflow: hidden;
+}
+.bar i {
+  display: block; height: 100%; width: 40px;
+  background: linear-gradient(90deg, transparent 0 0), repeating-linear-gradient(90deg, #2c64e0 0 8px, transparent 8px 11px);
+  animation: slide 1.1s linear infinite;
+}
+@keyframes slide { from { transform: translateX(-50px); } to { transform: translateX(210px); } }
+#boot small { color: #9fb6d8; font-family: var(--font-pixel); }
+
+/* ===================== MOBILE ===================== */
+@media (max-width: 720px) {
+  .icons { display: none; }
+  #win { left: 6px; right: 6px; top: 6px; bottom: 6px; }
+  .menubar { display: none; }
+  .tk .t { display: none; }
+  .tk { flex: 0 0 auto; }
+  #tray .tt { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ===================== LAYAR BOOT ===================== -->
+<div id="boot" title="Klik untuk lewati">
+  <div class="logo">REALISM<em>.</em>OS</div>
+  <div class="bar"><i></i></div>
+  <small>USER://ACCESS_GRANTED &nbsp; klik untuk masuk</small>
+</div>
+
+<!-- ===================== DESKTOP ===================== -->
+<div id="desktop">
+
+  <!-- Ikon desktop (navigasi 1) -->
+  <div class="icons" id="desk-icons"></div>
+
+  <!-- Jendela utama -->
+  <div id="win" role="application" aria-label="REALISM.OS">
+    <div class="titlebar">
+      <span class="tico" id="t-ico">🏠</span>
+      <span class="ttl" id="t-ttl">DEMETHER.EXE - Home</span>
+      <button class="wbtn" id="b-min" title="Minimize" aria-label="Minimize">_</button>
+      <button class="wbtn" id="b-max" title="Maximize" aria-label="Maximize">□</button>
+      <button class="wbtn x" id="b-close" title="Close" aria-label="Close">X</button>
+    </div>
+
+    <!-- Menu bar (navigasi 2) -->
+    <div class="menubar" id="menubar"></div>
+
+    <div class="toolbar">
+      <button class="tbtn" id="go-back" disabled>◀ Back</button>
+      <button class="tbtn" id="go-fwd" disabled>Forward ▶</button>
+      <div class="addr"><span>Address:</span><span id="addr">demether//home</span></div>
+    </div>
+
+    <div id="content">
+
+      <!-- ====================================================
+           1. HOME
+           ==================================================== -->
+      <section class="page" id="home" aria-labelledby="h-home">
+        <div class="hero-box">
+          <h1 class="hero" id="h-home">WELCOME TO MY SPACE</h1>
+          <div class="boot-line">USER://ACCESS_GRANTED &lt; CORE.PROTOCOL // ACTIVE &gt; <span class="blink">_</span></div>
+        </div>
+
+        <div class="marquee"><span>🌐 Recently Visited &nbsp;+&nbsp; 🧩 Bookmarks &nbsp;+&nbsp; 🔋 Quick Save &nbsp;&nbsp;///&nbsp;&nbsp; SYSTEM ONLINE. CONNECTIONS ACTIVE. &nbsp;&nbsp;///&nbsp;&nbsp; YOUR ACCESS POINT TO THE REALISM NETWORK</span></div>
+
+        <div class="grid c2">
+          <div class="photo" id="home-photo" style="border:1px solid #7f9db9;border-radius:4px;">
+            <img alt="REALISM.OS" data-src="images/image03.jpg">
+            <div class="ph-fallback"><b>images/image03.jpg</b><br>(taruh foto utama di sini)</div>
+          </div>
+
+          <div class="panel" style="margin:0">
+            <div class="ph">Readme.txt</div>
+            <div class="pb">
+              <!-- EDIT: teks sambutan personal -->
+              <p>Welcome to my little corner of REALISM.OS. I’m Demether, and this page is where I share what drew me in, how I understand the concept, and the visual details that caught my eye.</p>
+              <p>I wanted to make this page feel like my own: a little retro-computer nostalgia, a little Y2K energy, and my own words instead of a copy of the official website.</p>
+              <button class="btn-xp" data-go="about">Enter the system ▶</button>
+            </div>
+          </div>
+        </div>
+
+        <h2 class="pg" style="margin-top:16px">A little corner of my own</h2>
+        <div class="grid c3" id="home-cards"></div>
+      </section>
+
+      <!-- ====================================================
+           2. ABOUT ME / UNDERSTANDING REALISM
+           ==================================================== -->
+      <section class="page" id="about" aria-labelledby="h-about">
+        <h2 class="pg" id="h-about">About Me — Demether</h2>
+        <div class="grid c2">
+          <div class="panel">
+            <div class="ph">USER PROFILE // DEMETHER</div>
+            <div class="pb">
+              <div class="photo" style="max-width:300px;margin:0 auto 12px">
+                <img alt="Demether's profile photo" data-src="images/demether.jpg">
+                <div class="ph-fallback"><b>images/demether.jpg</b><br>(taruh foto lu di sini)</div>
+              </div>
+              <h3 style="text-align:center">I'm Demether Estue.</h3>
+              <p style="text-align:center">A creative soul who likes exploring ideas, visuals, and the little details that make a concept feel alive.</p>
+              </div>
+          </div>
+          <div class="panel">
+            <div class="ph">A LITTLE INTRODUCTION</div>
+            <div class="pb">
+              <p>Hi, I'm Demether Estue. I enjoy exploring creative things and turning ideas into something that feels personal. I'm here because REALISM caught my attention, and I wanted to be part of a space with a concept I could explore in my own way.</p>
+              <p>I'm not here to pretend I know everything. I want to learn, take part, and bring my own perspective into the experience.</p>
+              <div class="ph-edit"><b>MY PURPOSE</b><p style="margin:6px 0 0">My purpose is to enjoy the process, meet new people, and contribute through my own ideas and creativity. I want to make the most of this experience while staying true to myself.</p></div>
+            </div>
+          </div>
+        </div>
+        <h2 class="pg" style="margin-top:16px">My understanding of REALISM</h2>
+        <div class="panel pink">
+          <div class="ph">HOW I SEE IT</div>
+          <div class="pb">
+            <p>From what I understand, REALISM uses the idea of an operating system to shape its own digital world and identity. The terms <b>OS</b> and <b>Users</b> fit into that idea, while <b>Orbit Signals</b> is part of the wider concept around it.</p>
+            <p>To me, the computer-inspired idea makes REALISM feel like more than just a visual theme. It gives the project its own way of presenting identity, connection, and participation. That's my understanding of the concept, in my own words.</p>
+                      </div>
+        </div>
+      </section>
+
+      <!-- ====================================================
+           3. CONCEPT & VISUAL IDENTITY
+           ==================================================== -->
+      <section class="page" id="concept" aria-labelledby="h-concept">
+        <h2 class="pg" id="h-concept">Concept & Visual Identity</h2>
+        <div class="hero-box">
+          <h1 class="hero" style="font-size:clamp(20px,4vw,34px)">A DIGITAL WORLD WITH A RETRO-FUTURE FEEL</h1>
+          <div class="boot-line">MY VISUAL NOTES // PERSONAL INTERPRETATION <span class="blink">_</span></div>
+        </div>
+        <div class="panel">
+          <div class="ph">THE CONCEPT — IN MY WORDS</div>
+          <div class="pb">
+            <p>What stands out to me about REALISM is the way it builds an identity around a computer-system concept. Instead of treating the interface as decoration alone, the idea of a system gives the world its own language: there are OS, Users, and a wider network called Orbit Signals.</p>
+            <p>I see it as a mix of digital identity and world-building, where the computer-inspired framework helps connect the different parts into one concept.</p>
+          </div>
+        </div>
+        <div class="grid c2">
+          <div class="panel silver">
+            <div class="ph">VISUAL ELEMENTS I NOTICE</div>
+            <div class="pb">
+              <div class="chips">
+                <span class="chip">Windows-inspired UI</span><span class="chip">Retro computer</span>
+                <span class="chip">Y2K references</span><span class="chip">Glossy details</span>
+                <span class="chip">Digital collage</span><span class="chip">Expressive type</span>
+              </div>
+              <p style="margin-top:12px">These are the visual elements I associate with the direction. The way I use them here is my own interpretation, not a claim that every detail is an official brand rule.</p>
+            </div>
+          </div>
+          <div class="panel silver">
+            <div class="ph">MY COLOR NOTES</div>
+            <div class="pb">
+              <div class="swatch"><i></i><div><b>#B0D2F7</b><br>Soft sky blue</div></div>
+              <p class="note" style="margin-top:10px">The website's XP blue, silver, and Y2K accents are my design choices for this page. They are not presented as the complete official REALISM palette.</p>
+            </div>
+          </div>
+        </div>
+        <div class="panel">
+          <div class="ph">WHY I LIKE THIS DIRECTION</div>
+          <div class="pb">
+            <p>I like that the concept can feel nostalgic without looking stuck in the past. The old-computer references bring the familiarity, while the sharper colors, layered interface, and digital details give it a more futuristic mood.</p>
+            <p>For my own page, I wanted to keep that retro-computer feeling but make the writing and layout feel like me, rather than copying the official site section by section.</p>
+          </div>
+        </div>
+      </section>
+
+    </div><!-- /content -->
+
+    <div class="statusbar">
+      <div class="cell" id="st-msg">Done</div>
+      <div class="cell">REALISM.OS v01.26</div>
+      <div class="cell">🌐 Orbit Signals</div>
+    </div>
+  </div><!-- /win -->
+</div>
+
+<!-- ===================== START MENU ===================== -->
+<div id="menu" role="menu" aria-label="Start menu">
+  <div class="mh">REALISM.OS<small>USER://ACCESS_GRANTED</small></div>
+  <div id="menu-items"></div>
+  <div class="mf">
+    <button id="m-boot">⟳ Restart</button>
+    <button id="m-off">⏻ Log Off</button>
+  </div>
+</div>
+
+<!-- ===================== TASKBAR ===================== -->
+<div id="taskbar">
+  <button id="start" aria-haspopup="true" aria-expanded="false">▣ start</button>
+  <div class="task-items" id="task-items"></div>
+  <div id="tray"><span>🔋</span><span class="tt">ᯤ re:</span><span id="clock">00:00</span></div>
+</div>
+
+<!-- ===================== DIALOG ===================== -->
+<div class="overlay" id="dlg">
+  <div class="dialog" role="alertdialog" aria-labelledby="dlg-t">
+    <div class="titlebar"><span class="ttl" id="dlg-t">realism-os.exe</span></div>
+    <div class="body"><div class="big" id="dlg-i">⚠️</div><div id="dlg-m"></div></div>
+    <div class="foot">
+      <button class="btn-xp" id="dlg-ok" style="min-width:80px">OK</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="light" title="Klik untuk menutup"><img alt=""></div>
+
+
+<script>
+/* =====================================================================
+   KONFIGURASI  -  edit bagian ini di Notepad
+   =====================================================================
+   Foto: taruh di folder "images" lalu tulis nama filenya di bawah.
+   Kalau file foto belum ada, tampil kotak placeholder bertuliskan
+   nama file yang dicari, jadi mudah tahu foto mana yang kurang.
+   ===================================================================== */
+
+/* Daftar halaman (urutan = urutan menu).
+   id harus sama dengan id <section> di HTML. */
+var PAGES = [
+  { id: "home",    label: "Home",                    icon: "🏠" },
+  { id: "about",   label: "About Me",                icon: "👤" },
+  { id: "concept", label: "Concept & Visual Identity", icon: "💿" }
+];
+
+/* Tidak menampilkan daftar anggota. Halaman ini fokus pada profil Demether. */
+var MEMBERS = [];
+
+/* Foto galeri Visual Identity. Tambah/hapus baris sesuka hati. */
+var GALLERY = [];
+
+/* Kartu "Your access point" di Home (judul resmi dari situs) */
+var HOME_CARDS = [
+  { go: "about", icon: "👤", title: "ABOUT ME", text: "Meet Demether and read my take on REALISM." },
+  { go: "concept", icon: "💿", title: "CONCEPT + VISUALS", text: "The idea behind REALISM and the visual details I noticed." }
+];
+
+/* =====================================================================
+   KODE PROGRAM  -  biasanya tidak perlu diubah
+   ===================================================================== */
+(function () {
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+
+  /* ---------- foto dengan placeholder ---------- */
+  function photoBox(src, alt) {
+    return '<div class="photo"><img alt="' + esc(alt) + '" data-src="' + esc(src) + '">' +
+           '<div class="ph-fallback"><b>' + esc(src) + '</b><br>(foto belum ada)</div></div>';
+  }
+  function loadImages(root) {
+    $$("img[data-src]", root).forEach(function (img) {
+      var box = img.parentNode;
+      img.onerror = function () { box.classList.add("nofile"); };
+      img.onload = function () { box.classList.remove("nofile"); };
+      img.src = img.getAttribute("data-src");
+    });
+  }
+
+
+  $("#home-cards").innerHTML = HOME_CARDS.map(function (c) {
+    return '<div class="panel" style="margin:0"><div class="ph">' + c.icon + ' ' + esc(c.title) + '</div>' +
+      '<div class="pb"><p>' + esc(c.text) + '</p><button class="btn-xp" data-go="' + c.go + '">Open</button></div></div>';
+  }).join("");
+
+  /* ---------- navigasi ---------- */
+  var hist = [], pos = -1, current = null;
+
+  function pageInfo(id) { return PAGES.filter(function (p) { return p.id === id; })[0]; }
+
+  function show(id, fromHist) {
+    var info = pageInfo(id);
+    if (!info) { id = PAGES[0].id; info = PAGES[0]; }
+    $$(".page").forEach(function (p) { p.classList.toggle("show", p.id === id); });
+    $("#win").classList.remove("hidden");
+    $("#t-ttl").textContent = "DEMETHER.EXE - " + info.label;
+    $("#t-ico").textContent = info.icon;
+    $("#addr").textContent = "demether://" + id;
+    $("#st-msg").textContent = "Done - " + info.label;
+    document.title = "DEMETHER.EXE | " + info.label;
+    $("#content").scrollTop = 0;
+    current = id;
+
+    if (!fromHist) {
+      hist = hist.slice(0, pos + 1);
+      if (hist[hist.length - 1] !== id) { hist.push(id); }
+      pos = hist.length - 1;
+      if (location.hash !== "#" + id) { try { history.replaceState(null, "", "#" + id); } catch (e) {} }
+    }
+    $("#go-back").disabled = pos <= 0;
+    $("#go-fwd").disabled = pos >= hist.length - 1;
+
+    $$("[data-nav]").forEach(function (b) { b.classList.toggle("on", b.getAttribute("data-nav") === id); });
+    $$(".icon").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-nav") === id); });
+    $$("#menubar button").forEach(function (b) { b.classList.toggle("active", b.getAttribute("data-nav") === id); });
+    closeMenu();
+  }
+
+  function step(d) {
+    var n = pos + d;
+    if (n < 0 || n >= hist.length) return;
+    pos = n; show(hist[pos], true);
+  }
+
+  /* ikon desktop, menu bar, start menu, taskbar */
+  $("#desk-icons").innerHTML = PAGES.map(function (p) {
+    return '<button class="icon" data-nav="' + p.id + '"><span class="glyph">' + p.icon + '</span>' + esc(p.label) + '</button>';
+  }).join("");
+  $("#menubar").innerHTML = PAGES.map(function (p) {
+    return '<button data-nav="' + p.id + '">' + esc(p.label) + '</button>';
+  }).join("");
+  $("#menu-items").innerHTML = PAGES.map(function (p) {
+    return '<button class="mi" role="menuitem" data-nav="' + p.id + '"><span class="g">' + p.icon + '</span>' + esc(p.label) + '</button>';
+  }).join("");
+  $("#task-items").innerHTML = PAGES.map(function (p) {
+    return '<button class="tk" data-nav="' + p.id + '" title="' + esc(p.label) + '"><span>' + p.icon + '</span><span class="t">' + esc(p.label) + '</span></button>';
+  }).join("");
+
+  /* klik di mana pun pada elemen bernavigasi */
+  document.addEventListener("click", function (e) {
+    var n = e.target.closest("[data-nav]");
+    if (n) { show(n.getAttribute("data-nav")); return; }
+    var g = e.target.closest("[data-go]");
+    if (g) { show(g.getAttribute("data-go")); return; }
+    if (!e.target.closest("#menu") && !e.target.closest("#start")) closeMenu();
+
+    var ph = e.target.closest(".gallery .photo");
+    if (ph && !ph.classList.contains("nofile")) {
+      var im = $("img", ph);
+      $("#light img").src = im.src; $("#light img").alt = im.alt;
+      $("#light").classList.add("open");
+    }
+  });
+  $("#light").addEventListener("click", function () { this.classList.remove("open"); });
+
+  $("#go-back").onclick = function () { step(-1); };
+  $("#go-fwd").onclick = function () { step(1); };
+
+  /* keyboard: Alt+Left/Right, angka 1-3, Esc */
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") { closeMenu(); $("#light").classList.remove("open"); $("#dlg").classList.remove("open"); }
+    if (e.altKey && e.key === "ArrowLeft") { step(-1); }
+    if (e.altKey && e.key === "ArrowRight") { step(1); }
+    if (!e.altKey && !e.ctrlKey && !e.metaKey && /^[1-9]$/.test(e.key) && PAGES[+e.key - 1] && !/INPUT|TEXTAREA/.test(document.activeElement.tagName)) {
+      show(PAGES[+e.key - 1].id);
+    }
+  });
+
+  window.addEventListener("hashchange", function () {
+    var id = location.hash.replace("#", "");
+    if (id && id !== current && pageInfo(id)) show(id);
+  });
+
+  /* ---------- start menu ---------- */
+  function closeMenu() { $("#menu").classList.remove("open"); $("#start").classList.remove("on"); $("#start").setAttribute("aria-expanded", "false"); }
+  $("#start").onclick = function () {
+    var open = $("#menu").classList.toggle("open");
+    this.classList.toggle("on", open);
+    this.setAttribute("aria-expanded", open);
+  };
+
+  /* ---------- tombol jendela ---------- */
+  function dialog(icon, msg, cb) {
+    $("#dlg-i").textContent = icon; $("#dlg-m").innerHTML = msg;
+    $("#dlg").classList.add("open");
+    $("#dlg-ok").onclick = function () { $("#dlg").classList.remove("open"); if (cb) cb(); };
+    $("#dlg-ok").focus();
+  }
+  $("#b-min").onclick = function () { $("#win").classList.add("hidden"); $("#st-msg").textContent = "Minimized"; };
+  $("#b-max").onclick = function () { $("#win").classList.toggle("max"); };
+  $("#b-close").onclick = function () {
+  dialog("⚠️", "<b>demether.exe</b> is still running.<br>This little space isn't ready to close yet.");
+};
+  $(".titlebar").addEventListener("dblclick", function () { $("#win").classList.toggle("max"); });
+
+  /* ---------- boot & log off ---------- */
+  var boot = $("#boot");
+  function runBoot() {
+    boot.classList.remove("off");
+    clearTimeout(runBoot.t);
+    runBoot.t = setTimeout(endBoot, 2600);
+  }
+  function endBoot() { boot.classList.add("off"); }
+  boot.onclick = endBoot;
+  $("#m-boot").onclick = function () { closeMenu(); runBoot(); };
+  $("#m-off").onclick = function () { closeMenu(); $("#win").classList.add("hidden"); runBoot(); setTimeout(function () { show(current || "home"); }, 2700); };
+
+  /* ---------- jam ---------- */
+  function tick() {
+    var d = new Date(), h = d.getHours(), m = d.getMinutes();
+    $("#clock").textContent = (h < 10 ? "0" : "") + h + ":" + (m < 10 ? "0" : "") + m;
+  }
+  tick(); setInterval(tick, 15000);
+
+  /* ---------- mulai ---------- */
+  loadImages(document);
+  var start = location.hash.replace("#", "");
+  show(pageInfo(start) ? start : "home");
+  runBoot();
+})();
+</script>
+</body>
+</html>
